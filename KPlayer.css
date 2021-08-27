@@ -1,0 +1,282 @@
+@charset "UTF-8";
+
+/* ----
+
+# Kico Player 0.9
+# By: Dreamer-Paul
+# Last Update: 2021.8.28
+
+一个简洁强大的网页音乐播放器。
+
+本代码为奇趣保罗原创，并遵守 MIT 开源协议。欢迎访问我的博客：https://paugram.com
+
+---- */
+
+kplayer{
+    --kp-primary: #3498db;
+    --kp-secondly: #ffc670;
+    --kp-gray: #aaa;
+
+    display: block;
+    overflow: auto;
+    font-size: 14px;
+    line-height: 1em;
+    background: #fff;
+    border-radius: 4px;
+    position: relative;
+    box-shadow: 0 1px 5px 1px rgba(0, 0, 0, .1), 0 0 5px rgba(0, 0, 0, .1);
+}
+kplayer *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* - 面板 */
+kplayer .kp-header{
+    height: 4em;
+    cursor: default;
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+}
+
+/* - 专辑 */
+kplayer .kp-cover{
+    width: 4em;
+    height: 4em;
+    float: left;
+    margin-right: 1em;
+    user-select: none;
+    vertical-align: middle;
+    transition: background .3s;
+	background: var(--kp-gray) url(data:image/jpeg;base64,/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNreQABAAQAAAA8AAD/4QMqaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA1LjUtYzAyMSA3OS4xNTQ5MTEsIDIwMTMvMTAvMjktMTE6NDc6MTYgICAgICAgICI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCBDQyAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NTNERjEzRjQzMDQzMTFFOEI5NkQ5NTkwMTU2NDBFMzUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NTNERjEzRjUzMDQzMTFFOEI5NkQ5NTkwMTU2NDBFMzUiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo1M0RGMTNGMjMwNDMxMUU4Qjk2RDk1OTAxNTY0MEUzNSIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo1M0RGMTNGMzMwNDMxMUU4Qjk2RDk1OTAxNTY0MEUzNSIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pv/uACZBZG9iZQBkwAAAAAEDABUEAwYKDQAABu4AAAdjAAAJgAAAC1D/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) center/cover;
+}
+
+/* - 时间 */
+kplayer .kp-time{
+    left: 0;
+    width: 4em;
+    opacity: 0;
+    color: #fff;
+    display: block;
+    line-height: 4em;
+    position: absolute;
+    text-align: center;
+    transition: opacity .3s;
+    background: rgba(0, 0, 0, .5);
+    border-top-left-radius: 4px;
+}
+kplayer .kp-header:hover .kp-time{
+    opacity: 1;
+}
+
+/* - 信息 */
+kplayer .kp-info{
+    margin: .6em 6.5em .5em 5em;
+}
+kplayer .kico-title, kplayer .kico-artist{
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-bottom: .5em;
+    text-overflow: ellipsis;
+}
+kplayer .kico-artist{
+    color: #aaa;
+    color: var(--kp-gray);
+    font-size: .85em;
+}
+
+/* - 按钮 */
+kplayer .kp-controls{
+    top: .5em;
+    left: 5em;
+    right: 6.5em;
+    bottom: .4em;
+    opacity: 0;
+    background: #fff;
+    position: absolute;
+    transition: opacity .3s;
+}
+kplayer .kp-header:hover .kp-controls{
+    opacity: 1;
+}
+
+kplayer .control-item{
+    color: #3498db;
+    color: var(--kp-primary);
+    cursor: pointer;
+    display: inline-block;
+}
+kplayer .control-item svg{
+    width: 2.5em;
+    height: 2.5em;
+}
+
+/* - 设置 */
+kplayer .kp-settings{
+    top: .75em;
+    right: .5em;
+    position: absolute;
+}
+
+kplayer .setting-item{
+    width: 2em;
+    color: #aaa;
+    color: var(--kp-gray);
+    cursor: pointer;
+	line-height: 2em;
+	text-align: center;
+    display: inline-block;
+}
+kplayer .setting-item svg{
+    width: 1.5em;
+    height: 1.5em;
+    vertical-align: middle;
+}
+
+/* - 进度条 */
+kplayer .kp-bar{
+    left: 4em;
+    right: 0;
+    bottom: 0;
+    height: .4em;
+    cursor: pointer;
+    position: absolute;
+    background: #efefef;
+}
+kplayer .kp-bar .loaded,
+kplayer .kp-bar .played{
+    top: 0;
+    height: .4em;
+    max-width: 100%;
+    position: absolute;
+}
+kplayer .kp-bar .loaded{
+    background: #e5e5e5;
+}
+kplayer .kp-bar .played{
+    background-color: #ffc670;
+    background-color: var(--kp-secondly);
+}
+
+/* 下拉载入
+-------------------------------- */
+kplayer .kp-drop{
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    color: #fff;
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+    background: rgba(0, 0, 0, .3);
+    transition: opacity .3s, visibility .3s;
+}
+kplayer .kp-drop.active{
+    opacity: 1;
+    visibility: visible;
+}
+kplayer .kp-drop span{
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1em;
+    margin: auto;
+    display: block;
+    font-size: 2em;
+    line-height: 1em;
+    text-align: center;
+    position: absolute;
+}
+
+/* 播放列表
+-------------------------------- */
+kplayer .kp-list{
+    max-height: 0;
+    overflow: auto;
+    list-style: none;
+    transition: max-height .3s;
+    border-bottom: 1px solid #eee;
+}
+kplayer .kp-list.show{
+    max-height: 15em;
+    max-height: 50vh;
+}
+
+kplayer .kp-list::-webkit-scrollbar{ width: 5px }
+kplayer .kp-list::-webkit-scrollbar-thumb{
+    background: #eee;
+}
+kplayer .kp-list::-webkit-scrollbar-thumb:hover{
+    background-color: #3498db;
+    background-color: var(--kp-primary);
+}
+
+kplayer .list-item{
+    padding: 1em;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: background .3s, padding .3s;
+}
+kplayer .list-item.current{
+    padding-left: 1.5em;
+}
+kplayer .list-item.current:before{
+    content: '';
+    top: 1em;
+    left: -.5em;
+    width: 1em;
+    height: 1em;
+    display: block;
+    position: absolute;
+    background-color: #3498db;
+    background-color: var(--kp-primary);
+    transform: rotate(45deg);
+}
+kplayer .list-item:nth-child(1n){
+    background: rgba(0, 0, 0, .02);
+}
+kplayer .list-item:nth-child(2n){
+    background: #fff;
+}
+kplayer .list-item:hover{
+    background: rgba(0, 0, 0, .05);
+}
+
+kplayer .item-number{
+    margin-right: .75em;
+    color: rgba(0, 0, 0, .6);
+}
+kplayer .item-title:after{
+    content: '-';
+    margin: 0 .25em;
+}
+kplayer .item-artist{
+    color: rgba(0, 0, 0, .6);
+}
+
+/* 歌词
+-------------------------------- */
+kplayer .kp-lyrics{
+    color: #666;
+    text-align: center;
+}
+kplayer .kp-lyrics span{
+    padding: 1em;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+kplayer .kp-lyrics span:empty:after{
+    content: "Music...";
+}
