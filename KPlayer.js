@@ -366,7 +366,7 @@ var KPlayer = function KPlayer (settings) {
     };
 
     this.jump = function (id) {
-        if(!id) return;
+        if(id === undefined) return;
 
         // 更新信息
         current.id = id;
