@@ -2,7 +2,7 @@
 
 # KPlayer 0.9
 # By: Dreamer-Paul
-# Last Update: 2021.8.28
+# Last Update: 2021.8.30
 
 一个简洁强大的网页音乐播放器。
 
@@ -366,23 +366,28 @@ var KPlayer = function KPlayer (settings) {
     };
 
     this.jump = function (id) {
-        if(id && id !== current.id) current.id = id;
+        if(!id) return;
 
         // 更新信息
+        current.id = id;
         current.lyric_index = 0;
+
         elements.details.title.innerText = current.playlist[current.id].title;
         elements.details.artist.innerText = current.playlist[current.id].artist;
-        current.playlist[current.id].cover ? elements.details.cover.style.backgroundImage = "url('" + current.playlist[current.id].cover + "')" : elements.details.cover.style.backgroundImage = "url('./player/default.jpg')";
+        elements.details.cover.style.backgroundImage = current.playlist[current.id].cover ? "url('" + current.playlist[current.id].cover + "')" : "";
         elements.player.src = current.playlist[current.id].link;
         elements.player.play();
 
         if("mediaSession" in navigator){
-            navigator.mediaSession.metadata = new MediaMetadata({
+            var _meta = {
                 title: current.playlist[current.id].title,
                 artist: current.playlist[current.id].artist,
-                album: current.playlist[current.id].album,
-                artwork: [{ src: current.playlist[current.id].cover }]
-            });
+            };
+
+            if(current.playlist[current.id].album) _meta.album = current.playlist[current.id].album;
+            if(current.playlist[current.id].cover) _meta.artwork = [{ src: current.playlist[current.id].cover }]
+
+            navigator.mediaSession.metadata = new MediaMetadata(_meta);
             navigator.mediaSession.setActionHandler('play', that.play);
             navigator.mediaSession.setActionHandler('pause', that.pause);
             navigator.mediaSession.setActionHandler('previoustrack', that.prev);
