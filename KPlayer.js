@@ -204,34 +204,37 @@ var KPlayer = function KPlayer (settings) {
             elements.player.volume = 1;
 
             elements.player.addEventListener("play", function () {
-                interval = setInterval(interval_fc, 500);
+                if(!interval) interval = setInterval(interval_fc, 500);
                 elements.buttons.toggle.innerHTML = static.pause;
                 actions.title_change(true);
             });
             elements.player.addEventListener("pause", function () {
+                interval = clearInterval(interval);
                 elements.buttons.toggle.innerHTML = static.play;
                 actions.title_change(false);
-                clearInterval(interval);
             });
             elements.player.addEventListener("progress", function () {
                 var percentage = elements.player.buffered.length ? elements.player.buffered.end(elements.player.buffered.length - 1) / elements.player.duration : 0;
                 elements.bar.loaded.style.width = percentage * 100 + "%";
             });
             elements.player.addEventListener("error", function () {
+                interval = clearInterval(interval);
+                elements.buttons.toggle.innerHTML = static.play;
+                actions.title_change(false);
+
                 elements.details.title.innerText = ":(";
                 elements.details.artist.innerText = "发生了错误";
             });
             elements.player.addEventListener("ended", function () {
-                if(current.play_mode === 0){
+                // 列表和随机列表循环
+                if(current.play_mode === 0 || current.play_mode === 2){
                     that.next();
                 }
+                // 单曲循环
                 else if(current.play_mode === 1){
                     current.lyric_index = 0;
                     that.play();
                     elements.lyric.innerText = current.playlist[current.id].title + " (" + current.playlist[current.id].artist + ")";
-                }
-                else if(current.play_mode === 2){
-                    that.next();
                 }
             });
 

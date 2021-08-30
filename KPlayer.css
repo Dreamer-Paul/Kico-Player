@@ -238,8 +238,8 @@ kplayer .list-item.current:before{
     height: 1em;
     display: block;
     position: absolute;
-    background-color: #3498db;
-    background-color: var(--kp-primary);
+    background-color: #ffc670;
+    background-color: var(--kp-secondly);
     transform: rotate(45deg);
 }
 kplayer .list-item:nth-child(1n){
