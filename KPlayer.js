@@ -25,7 +25,7 @@ var KPlayer = function KPlayer (settings) {
         page_title: document.title
     };
 
-    var static = {
+    var icons = {
         left: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="currentColor"><path d="M13,10c1.1,0,2,1.35,2,3v3.7l10.495-5.772C27.423,9.867,29,10.8,29,13v14c0,2.2-1.577,3.133-3.505,2.072L15,23.3V27c0,1.65-0.9,3-2,3s-2-1.35-2-3V13C11,11.35,11.9,10,13,10z"/></svg>',
         right: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="currentColor"><path d="M27,10c-1.1,0-2,1.35-2,3v3.7l-10.495-5.772C12.577,9.867,11,10.8,11,13v14c0,2.2,1.577,3.133,3.505,2.072L25,23.3V27c0,1.65,0.9,3,2,3s2-1.35,2-3V13C29,11.35,28.1,10,27,10z"/></svg>',
         play: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="currentColor"><path d="M20,0C8.954,0,0,8.954,0,20c0,11.046,8.954,20,20,20s20-8.954,20-20C40,8.954,31.046,0,20,0z M28.495,21.928l-12.99,7.145C13.577,30.133,12,29.2,12,27V13c0-2.2,1.577-3.133,3.505-2.072l12.99,7.145C30.423,19.133,30.423,20.867,28.495,21.928z"/></svg>',
@@ -42,7 +42,7 @@ var KPlayer = function KPlayer (settings) {
 
         list: '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" fill="currentColor"><path d="M25,8H3C2.448,8,2,7.552,2,7s0.448-1,1-1h22c0.553,0,1,0.448,1,1S25.553,8,25,8z"/><path d="M25,15H3c-0.552,0-1-0.448-1-1s0.448-1,1-1h22c0.553,0,1,0.448,1,1S25.553,15,25,15z"/><path d="M25,22H3c-0.552,0-1-0.447-1-1s0.448-1,1-1h22c0.553,0,1,0.447,1,1S25.553,22,25,22z"/></svg>'
     };
-    
+
     // 小工具
     var tools = {
         // 拖拽文件名称识别
@@ -76,12 +76,12 @@ var KPlayer = function KPlayer (settings) {
         container: tools.create("kplayer"),
         player: document.createElement("audio"),
         buttons: { // 操作按钮
-            toggle: tools.create("div", { class: "control-item kico-toggle", html: static.play }),
-            prev: tools.create("div", { class: "control-item kico-prev", html: static.left }),
-            next: tools.create("div", { class: "control-item kico-next", html: static.right }),
-            mode: tools.create("div", { class: "setting-item kico-mode", html: static.loop_all }),
-            list: tools.create("div", { class: "setting-item kico-list", html: static.list }),
-            volume: tools.create("div", { class: "setting-item kico-volume", html: static.max })
+            toggle: tools.create("div", { class: "control-item kico-toggle", html: icons.play }),
+            prev: tools.create("div", { class: "control-item kico-prev", html: icons.left }),
+            next: tools.create("div", { class: "control-item kico-next", html: icons.right }),
+            mode: tools.create("div", { class: "setting-item kico-mode", html: icons.loop_all }),
+            list: tools.create("div", { class: "setting-item kico-list", html: icons.list }),
+            volume: tools.create("div", { class: "setting-item kico-volume", html: icons.max })
         },
         details: { // 歌曲详情
             title: tools.create("span", { class: "kico-title", text: "欢迎使用 Kico Player" }),
@@ -168,7 +168,7 @@ var KPlayer = function KPlayer (settings) {
                 e.preventDefault();
                 wrapper.drop.classList.remove("active");
                 var arr = [];
-                
+
                 for(var i = 0; i < e.dataTransfer.items.length; i++){
                     var s = e.dataTransfer.items[i].getAsFile();
 
@@ -186,16 +186,16 @@ var KPlayer = function KPlayer (settings) {
                     }
 
                     var n = tools.name(s.name);
-                    
+
                     var single = {
                         title: n.title,
                         artist: n.artist,
                         link: url
                     };
-                    
+
                     arr.push(single);
                 }
-                
+
                 that.add(arr);
                 that.jump(current.playlist.length - 1);
             });
@@ -205,12 +205,12 @@ var KPlayer = function KPlayer (settings) {
 
             elements.player.addEventListener("play", function () {
                 if(!interval) interval = setInterval(interval_fc, 500);
-                elements.buttons.toggle.innerHTML = static.pause;
+                elements.buttons.toggle.innerHTML = icons.pause;
                 actions.title_change(true);
             });
             elements.player.addEventListener("pause", function () {
                 interval = clearInterval(interval);
-                elements.buttons.toggle.innerHTML = static.play;
+                elements.buttons.toggle.innerHTML = icons.play;
                 actions.title_change(false);
             });
             elements.player.addEventListener("progress", function () {
@@ -219,7 +219,7 @@ var KPlayer = function KPlayer (settings) {
             });
             elements.player.addEventListener("error", function () {
                 interval = clearInterval(interval);
-                elements.buttons.toggle.innerHTML = static.play;
+                elements.buttons.toggle.innerHTML = icons.play;
                 actions.title_change(false);
 
                 elements.details.title.innerText = ":(";
@@ -306,41 +306,42 @@ var KPlayer = function KPlayer (settings) {
         lyric: function (lyric, sub_lyric) {
             var time, text, sub_text, single;
 
-            current.lyric = [];
-
             // var text = lyric.match(/\[[0-9]{2,}:[0-9]{2}\.[0-9]{2,}\](\S| )+/g).replace(/\[[0-9]{2,}:[0-9]{2}\.[0-9]{2,}\]/g);
 
-            time = lyric.match(/\d{2,}:\d{2,}.\d{2,4}/g);
+            time = lyric.match(/\d{2,}:\d{2,}.\d{1,4}/g);
             text = lyric.match(/\d{1}\]+.*/g);
 
             if(sub_lyric) sub_text = sub_lyric.match(/\d{1}\]+.*/g);
 
             if(settings.debug) console.log(time, text, sub_text);
 
-            if(time && (time.length === text.length)){
-                for(var i = 0; i < time.length; i++){
-                    var cache = time[i].match(/\d{2,}/g);
-                    var minute = parseInt(cache[0] * 60);
-                    var second = parseInt(cache[1]);
-                    var milli = parseFloat(cache[2].substr(0, 2) / 60);
+            // 时间和歌词数量解析结果对的上
+            if (time && (time.length === text.length)) {
+                current.lyric = time.map((item, index) => {
+                    const _range = item.match(/\d+/g);
+                    const min = parseInt(_range[0] * 60);
+                    const sec = parseInt(_range[1]);
+                    const ms = parseFloat(_range[2].substr(0, 2) / 60);
 
-                    single = {
-                        time: minute + second + milli,
-                        text: text[i].substr(2)
-                    };
+                    const _lyric = {
+                        time: min + sec + ms,
+                        text: text[index].substr(2)
+                    }
 
-                    if (sub_text && text.length === sub_text.length) single.sub_text = sub_text[i].substr(2);
-                    current.lyric.push(single);
-                }
+                    if (sub_text && text.length === sub_text.length) {
+                        _lyric.sub_text = sub_text[index].substr(2);
+                    }
+
+                    return _lyric;
+                });
 
                 if(settings.debug) console.log(current.lyric);
             }
-            else{
-                single = {
+            else {
+                current.lyric = [{
                     time: 0,
                     text: "当前歌词不支持滚动"
-                };
-                current.lyric.push(single);
+                }];
             }
         }
     };
@@ -448,9 +449,9 @@ var KPlayer = function KPlayer (settings) {
         var btn = elements.buttons.mode;
 
         switch (current.play_mode){
-            case 0: current.play_mode = 1; btn.innerHTML = static.loop_single; break;
-            case 1: current.play_mode = 2; btn.innerHTML = static.rand; build.randlist(); break;
-            case 2: current.play_mode = 0; btn.innerHTML = static.loop_all; break;
+            case 0: current.play_mode = 1; btn.innerHTML = icons.loop_single; break;
+            case 1: current.play_mode = 2; btn.innerHTML = icons.rand; build.randlist(); break;
+            case 2: current.play_mode = 0; btn.innerHTML = icons.loop_all; break;
         }
 
         if(settings.debug) console.log("当前播放模式：" + current.play_mode);
@@ -485,10 +486,10 @@ var KPlayer = function KPlayer (settings) {
             var btn = elements.buttons.volume;
 
             switch (elements.player.volume){
-                case 1: elements.player.volume = 0.75; btn.innerHTML = static.mid; break;
-                case 0.75: elements.player.volume = 0.50; btn.innerHTML = static.low; break;
-                case 0.50: elements.player.volume = 0.25; btn.innerHTML = static.none; break;
-                case 0.25: elements.player.volume = 1; btn.innerHTML = static.max; break;
+                case 1: elements.player.volume = 0.75; btn.innerHTML = icons.mid; break;
+                case 0.75: elements.player.volume = 0.50; btn.innerHTML = icons.low; break;
+                case 0.50: elements.player.volume = 0.25; btn.innerHTML = icons.none; break;
+                case 0.25: elements.player.volume = 1; btn.innerHTML = icons.max; break;
             }
         },
         title_change: function (stat) {

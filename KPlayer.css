@@ -251,16 +251,16 @@ kplayer .list-item:hover{
     background: rgba(0, 0, 0, .05);
 }
 
+kplayer .item-number, kplayer .item-artist{
+    opacity: .6;
+}
+
 kplayer .item-number{
     margin-right: .75em;
-    color: rgba(0, 0, 0, .6);
 }
 kplayer .item-title:after{
     content: '-';
     margin: 0 .25em;
-}
-kplayer .item-artist{
-    color: rgba(0, 0, 0, .6);
 }
 
 /* 歌词
