@@ -2,7 +2,7 @@
 
 # KPlayer 0.9
 # By: Dreamer-Paul
-# Last Update: 2021.9.7
+# Last Update: 2022.5.12
 
 一个简洁强大的网页音乐播放器。
 
@@ -99,6 +99,49 @@ var KPlayer = function KPlayer (settings) {
         list_items: []
     };
 
+    // 事件
+    var events = {
+        onPlay: () => {
+            if (!interval) interval = setInterval(interval_fc, 500);
+
+            elements.buttons.toggle.innerHTML = icons.pause;
+            actions.title_change(true);
+        },
+        onPause: () => {
+            interval = clearInterval(interval);
+            elements.buttons.toggle.innerHTML = icons.play;
+            actions.title_change(false);
+        },
+        onProgress: () => {
+            const player = elements.player;
+            const percentage = player.buffered.length ? (
+                player.buffered.end(player.buffered.length - 1) / player.duration
+            ) : 0;
+
+            elements.bar.loaded.style.width = percentage * 100 + "%";
+        },
+        onError: () => {
+            interval = clearInterval(interval);
+            elements.buttons.toggle.innerHTML = icons.play;
+            actions.title_change(false);
+
+            elements.details.title.innerText = ":(";
+            elements.details.artist.innerText = "发生了错误";
+        },
+        onEnd: () => {
+            // 列表和随机列表循环
+            if(current.play_mode === 0 || current.play_mode === 2){
+                this.next();
+            }
+            // 单曲循环
+            else if(current.play_mode === 1){
+                current.lyric_index = 0;
+                this.play();
+                elements.lyric.innerText = current.playlist[current.id].title + " (" + current.playlist[current.id].artist + ")";
+            }
+        }
+    }
+
     var wrapper = {
         wrap: tools.create("div", { class: "kp-header" }),
         info: tools.create("div", { class: "kp-info" }),
@@ -110,21 +153,9 @@ var KPlayer = function KPlayer (settings) {
 
     var interval;
     var interval_fc = function () {
-        elements.details.time.innerText = calc.sec_time(elements.player.currentTime);
-        elements.bar.played.style.width = (elements.player.currentTime / elements.player.duration) * 100 + "%";
-
-        if(current.playlist[current.id].lyric){
-            if(current.lyric[current.lyric_index] && elements.player.currentTime > current.lyric[current.lyric_index].time){
-                elements.lyric.innerText = current.lyric[current.lyric_index].text;
-                if(current.lyric[current.lyric_index].sub_text){
-                    elements.lyric.innerHTML = current.lyric[current.lyric_index].text + "<br><br>" + current.lyric[current.lyric_index].sub_text;
-                }
-                else{
-                    elements.lyric.innerText = current.lyric[current.lyric_index].text;
-                }
-                current.lyric_index++;
-            }
-        }
+        actions.update_time();
+        actions.update_bar();
+        actions.update_lyric_playing();
     };
 
     // 构造模块
@@ -148,23 +179,23 @@ var KPlayer = function KPlayer (settings) {
             settings.container.appendChild(elements.container); // 总添加
 
             // 拖动播放
-            elements.container.addEventListener("dragenter", function (e) {
+            elements.container.ondragenter = function (e) {
                 e.preventDefault();
                 wrapper.drop.classList.add("active");
-            });
-            elements.container.addEventListener("dragover", function (e) {
+            };
+            elements.container.ondragover = function (e) {
                 e.preventDefault();
                 wrapper.drop.classList.add("active");
-            });
-            elements.container.addEventListener("drag", function (e) {
+            };
+            elements.container.ondrag = function (e) {
                 e.preventDefault();
                 wrapper.drop.classList.add("active");
-            });
-            elements.container.addEventListener("dragleave", function (e) {
+            };
+            elements.container.ondragleave = function (e) {
                 e.preventDefault();
                 wrapper.drop.classList.remove("active");
-            });
-            elements.container.addEventListener("drop", function (e) {
+            };
+            elements.container.ondrop = function (e) {
                 e.preventDefault();
                 wrapper.drop.classList.remove("active");
                 var arr = [];
@@ -187,75 +218,45 @@ var KPlayer = function KPlayer (settings) {
 
                     var n = tools.name(s.name);
 
-                    var single = {
+                    arr.push({
                         title: n.title,
                         artist: n.artist,
                         link: url
-                    };
-
-                    arr.push(single);
+                    });
                 }
 
                 that.add(arr);
                 that.jump(current.playlist.length - 1);
-            });
+            };
 
             // 播放器
             elements.player.volume = 1;
 
-            elements.player.addEventListener("play", function () {
-                if(!interval) interval = setInterval(interval_fc, 500);
-                elements.buttons.toggle.innerHTML = icons.pause;
-                actions.title_change(true);
-            });
-            elements.player.addEventListener("pause", function () {
-                interval = clearInterval(interval);
-                elements.buttons.toggle.innerHTML = icons.play;
-                actions.title_change(false);
-            });
-            elements.player.addEventListener("progress", function () {
-                var percentage = elements.player.buffered.length ? elements.player.buffered.end(elements.player.buffered.length - 1) / elements.player.duration : 0;
-                elements.bar.loaded.style.width = percentage * 100 + "%";
-            });
-            elements.player.addEventListener("error", function () {
-                interval = clearInterval(interval);
-                elements.buttons.toggle.innerHTML = icons.play;
-                actions.title_change(false);
-
-                elements.details.title.innerText = ":(";
-                elements.details.artist.innerText = "发生了错误";
-            });
-            elements.player.addEventListener("ended", function () {
-                // 列表和随机列表循环
-                if(current.play_mode === 0 || current.play_mode === 2){
-                    that.next();
-                }
-                // 单曲循环
-                else if(current.play_mode === 1){
-                    current.lyric_index = 0;
-                    that.play();
-                    elements.lyric.innerText = current.playlist[current.id].title + " (" + current.playlist[current.id].artist + ")";
-                }
-            });
+            elements.player.addEventListener("play", events.onPlay);
+            elements.player.addEventListener("pause", events.onPause);
+            elements.player.addEventListener("progress", events.onProgress);
+            elements.player.addEventListener("error", events.onError);
+            elements.player.addEventListener("ended", events.onEnd);
 
             // 按钮们
             elements.buttons.toggle.addEventListener("click", that.toggle);
             elements.buttons.prev.addEventListener("click", that.prev);
             elements.buttons.next.addEventListener("click", that.next);
             elements.buttons.mode.addEventListener("click", that.mode);
-            elements.buttons.list.addEventListener("click", that.list_toggle);
-            elements.buttons.volume.addEventListener("click", actions.volume);
+            elements.buttons.list.addEventListener("click", that.toggle_list);
+            elements.buttons.volume.addEventListener("click", that.toggle_volume);
 
             // 进度条
             elements.bar.wrap.appendChild(elements.bar.loaded);
             elements.bar.wrap.appendChild(elements.bar.played);
             elements.bar.wrap.addEventListener("click", function (t) {
-                if(elements.player.currentTime){
-                    elements.player.currentTime = (t.offsetX / elements.bar.wrap.clientWidth) * elements.player.duration;
-                }
-                if(current.playlist[current.id].lyric){
-                    calc.lyric();
-                }
+                if (!elements.player.currentTime) return;
+
+                elements.player.currentTime = (t.offsetX / elements.bar.wrap.clientWidth) * elements.player.duration;
+                actions.update_bar();
+                actions.update_time();
+
+                current.lyric.length && actions.update_lyric();
             });
         },
         playlist: function (item) {
@@ -289,14 +290,10 @@ var KPlayer = function KPlayer (settings) {
             });
         },
         randlist: function () {
-            function rand_gen(min, max) {
-                return Math.floor(Math.random() * (max - min) + min);
-            }
-
             for(var i = 0; i < current.randlist.length - 1; i++){
                 i++;
-                var a = rand_gen(0, current.randlist.length - 1);
-                var b = rand_gen(0, current.randlist.length - 1);
+                var a = calc.random(0, current.randlist.length - 1);
+                var b = calc.random(0, current.randlist.length - 1);
                 var cache = current.randlist[a];
 
                 current.randlist[a] = current.randlist[b];
@@ -304,7 +301,7 @@ var KPlayer = function KPlayer (settings) {
             }
         },
         lyric: function (lyric, sub_lyric) {
-            var time, text, sub_text, single;
+            var time, text, sub_text;
 
             // var text = lyric.match(/\[[0-9]{2,}:[0-9]{2}\.[0-9]{2,}\](\S| )+/g).replace(/\[[0-9]{2,}:[0-9]{2}\.[0-9]{2,}\]/g);
 
@@ -348,14 +345,10 @@ var KPlayer = function KPlayer (settings) {
 
     // 播放与暂停切换
     this.play = function () {
-        if(elements.player.src){
-            elements.player.play();
-        }
+        elements.player.src && elements.player.play();
     };
     this.pause = function () {
-        if(elements.player.src){
-            elements.player.pause();
-        }
+        elements.player.src && elements.player.pause();
     };
     this.toggle = function () {
         if(elements.player.src){
@@ -389,10 +382,10 @@ var KPlayer = function KPlayer (settings) {
             if(current.playlist[current.id].cover) _meta.artwork = [{ src: current.playlist[current.id].cover }]
 
             navigator.mediaSession.metadata = new MediaMetadata(_meta);
-            navigator.mediaSession.setActionHandler('play', that.play);
-            navigator.mediaSession.setActionHandler('pause', that.pause);
-            navigator.mediaSession.setActionHandler('previoustrack', that.prev);
-            navigator.mediaSession.setActionHandler('nexttrack', that.next);
+            navigator.mediaSession.setActionHandler("play", that.play);
+            navigator.mediaSession.setActionHandler("pause", that.pause);
+            navigator.mediaSession.setActionHandler("previoustrack", that.prev);
+            navigator.mediaSession.setActionHandler("nexttrack", that.next);
         }
 
         // 上次播放记录
@@ -476,29 +469,50 @@ var KPlayer = function KPlayer (settings) {
     };
 
     // 播放列表切换显示
-    this.list_toggle = function () {
+    this.toggle_list = function () {
         elements.playlist.classList.toggle("show");
     };
 
-    // 事件模块
-    var actions = {
-        volume: function () {
-            var btn = elements.buttons.volume;
+    // 切换音量
+    this.toggle_volume = function () {
+        var btn = elements.buttons.volume;
+        var player = elements.player;
 
-            switch (elements.player.volume){
-                case 1: elements.player.volume = 0.75; btn.innerHTML = icons.mid; break;
-                case 0.75: elements.player.volume = 0.50; btn.innerHTML = icons.low; break;
-                case 0.50: elements.player.volume = 0.25; btn.innerHTML = icons.none; break;
-                case 0.25: elements.player.volume = 1; btn.innerHTML = icons.max; break;
-            }
-        },
-        title_change: function (stat) {
-            settings.title_change && current.playlist[current.id] && stat === true ? document.title = "▶ " + current.playlist[current.id].title + " - " + current.page_title : document.title = current.page_title;
+        switch (player.volume){
+            case 1: player.volume = 0.75; btn.innerHTML = icons.mid; break;
+            case 0.75: player.volume = 0.50; btn.innerHTML = icons.low; break;
+            case 0.50: player.volume = 0.25; btn.innerHTML = icons.none; break;
+            case 0.25: player.volume = 1; btn.innerHTML = icons.max; break;
         }
     };
 
-    var calc = {
-        lyric: function () {
+    // 卸载播放器
+    this.destroy = function () {
+        elements.player.pause();
+
+        elements.player.removeEventListener("play", events.onPlay);
+        elements.player.removeEventListener("pause", events.onPause);
+        elements.player.removeEventListener("progress", events.onProgress);
+        elements.player.removeEventListener("error", events.onError);
+        elements.player.removeEventListener("ended", events.onEnd);
+
+        elements.buttons.toggle.removeEventListener("click", that.toggle);
+        elements.buttons.prev.removeEventListener("click", that.prev);
+        elements.buttons.next.removeEventListener("click", that.next);
+        elements.buttons.mode.removeEventListener("click", that.mode);
+        elements.buttons.list.removeEventListener("click", that.toggle_list);
+        elements.buttons.volume.removeEventListener("click", that.toggle_volume);
+
+        elements.player = undefined;
+        elements.buttons = undefined;
+
+        elements.container.remove();
+    }
+
+    // 事件模块
+    var actions = {
+        // 拖拽进度条更新歌词
+        update_lyric: function () {
             var num = 0;
 
             current.lyric.forEach(function (t, index) {
@@ -517,24 +531,52 @@ var KPlayer = function KPlayer (settings) {
                 elements.lyric.innerText = current.lyric[num].text.toString();
             }
         },
+        // 播放过程中更新歌词
+        update_lyric_playing: function () {
+            if(!current.lyric.length) return;
+
+            if(current.lyric[current.lyric_index] && elements.player.currentTime > current.lyric[current.lyric_index].time){
+                elements.lyric.innerText = current.lyric[current.lyric_index].text;
+                if(current.lyric[current.lyric_index].sub_text){
+                    elements.lyric.innerHTML = current.lyric[current.lyric_index].text + "<br><br>" + current.lyric[current.lyric_index].sub_text;
+                }
+                else{
+                    elements.lyric.innerText = current.lyric[current.lyric_index].text;
+                }
+                current.lyric_index++;
+            }
+        },
+        update_time: function () {
+            elements.details.time.innerText = calc.sec_time(elements.player.currentTime);
+        },
+        update_bar: function () {
+            elements.bar.played.style.width = (elements.player.currentTime / elements.player.duration) * 100 + "%";
+        },
+        title_change: function (stat) {
+            settings.title_change && current.playlist[current.id] && stat === true ? document.title = "▶ " + current.playlist[current.id].title + " - " + current.page_title : document.title = current.page_title;
+        }
+    };
+
+    // 计算函数
+    var calc = {
+        add_zero: function (num) {
+            return num < 10 ? "0" + num : num;
+        },
         sec_time: function (second) {
             if(isNaN(second)){
-                return '00:00';
+                return "00:00";
             }
             else{
-                var add0 = function add0(num) {
-                    return num < 10 ? '0' + num : num;
-                };
                 var min = parseInt(second / 60);
                 var sec = parseInt(second - min * 60);
                 var hours = parseInt(min / 60);
                 var minAdjust = parseInt(second / 60 - 60 * parseInt(second / 60 / 60));
 
-                return second >= 3600 ? add0(hours) + ':' + add0(minAdjust) + ':' + add0(sec) : add0(min) + ':' + add0(sec);
+                return second >= 3600 ? `${calc.add_zero(hours)}:${calc.add_zero(minAdjust)}:${calc.add_zero(sec)}` : `${calc.add_zero(min)}:${calc.add_zero(sec)}`;
             }
         },
         random: function (min, max) {
-            return Math.floor(min + Math.random() * (max - min));
+            return Math.floor(Math.random() * (max - min) + min);
         }
     };
 
@@ -544,7 +586,7 @@ var KPlayer = function KPlayer (settings) {
         build.playlist(settings.playlist);
 
         if(settings.show_list === true){
-            that.list_toggle();
+            that.toggle_list();
         }
         if(settings.debug){
             console.log("MP3 兼容情况：" + elements.player.canPlayType("audio/mp3"));
