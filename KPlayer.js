@@ -488,6 +488,7 @@ var KPlayer = function KPlayer (settings) {
 
     // 卸载播放器
     this.destroy = function () {
+        events.onPause();
         elements.player.pause();
 
         elements.player.removeEventListener("play", events.onPlay);
