@@ -2,7 +2,7 @@
 
 # KPlayer 0.9
 # By: Dreamer-Paul
-# Last Update: 2022.5.12
+# Last Update: 2023.5.22
 
 一个简洁强大的网页音乐播放器。
 
@@ -301,6 +301,14 @@ var KPlayer = function KPlayer (settings) {
             }
         },
         lyric: function (lyric, sub_lyric) {
+            if (!lyric) {
+                current.lyric = [];
+                elements.lyric.innerText = "纯音乐，请欣赏...";
+                return;
+            }
+
+            elements.lyric.innerText = `${current.playlist[current.id].title} (${current.playlist[current.id].artist})`;
+
             var time, text, sub_text;
 
             // var text = lyric.match(/\[[0-9]{2,}:[0-9]{2}\.[0-9]{2,}\](\S| )+/g).replace(/\[[0-9]{2,}:[0-9]{2}\.[0-9]{2,}\]/g);
@@ -393,18 +401,8 @@ var KPlayer = function KPlayer (settings) {
         elements.list_items[current.id].classList.add("current");
         current.last_id = current.id;
 
-        // 如果有歌词
-        if(current.playlist[current.id].lyric && current.playlist[current.id].sub_lyric){
-            build.lyric(current.playlist[current.id].lyric, current.playlist[current.id].sub_lyric);
-            elements.lyric.innerText = current.playlist[current.id].title + " (" + current.playlist[current.id].artist + ")";
-        }
-        else if(current.playlist[current.id].lyric){
-            build.lyric(current.playlist[current.id].lyric);
-            elements.lyric.innerText = current.playlist[current.id].title + " (" + current.playlist[current.id].artist + ")";
-        }
-        else{
-            elements.lyric.innerText = "纯音乐，请欣赏...";
-        }
+        // 如果有歌词则处理歌词
+        build.lyric(current.playlist[current.id].lyric, current.playlist[current.id].sub_lyric);
 
         if(settings.debug) console.log("当前 ID：" + current.id);
     };
